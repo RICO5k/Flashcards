@@ -50,12 +50,17 @@ public class Flashcards {
         if(cards.size() > 0) {
             for (int i = 0; i < reps; i++) {
                 String cardDescription = cards.getRandomCard();
-                System.out.println(cardDescription);
+                System.out.println("Print the definition of \"" + cardDescription + "\":");
                 String answer = scanner.nextLine();
-                if (answer.equals(cards.getCardDef(cardDescription))) {
+                String correctAnswer = cards.getCardDef(cardDescription);
+                if (answer.equals(correctAnswer)) {
                     System.out.println("Correct answer.");
                 } else {
-                    System.out.println("Wrong answer.");
+                    if(cards.containsCardDefinition(answer)) {
+                        System.out.println("Wrong answer. The correct one is \"" + correctAnswer + "\", you've just written the definition of \"" + cards.getCardDesc(answer) + "\"");
+                    } else {
+                        System.out.println("Wrong answer. The correct one is \"" + correctAnswer + "\".");
+                    }
                 }
             }
         } else {
@@ -98,14 +103,14 @@ public class Flashcards {
 
     private void removeCard() {
         System.out.println("The card:");
-        String definition = scanner.nextLine();
+        String description = scanner.nextLine();
 
-        if(cards.containsCardDefinition(definition)) {
-            System.out.println("Can't remove \"" + definition + "\": there is no such card.");
+        if(!cards.containsCardDescription(description)) {
+            System.out.println("Can't remove \"" + description + "\": there is no such card.");
             return;
         }
 
-        cards.removeCard(definition);
+        cards.removeCard(description);
     }
 
     private void addCard() {

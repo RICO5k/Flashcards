@@ -16,6 +16,15 @@ public class CardsDB {
         return cards.get(desc);
     }
 
+    public String getCardDesc(String def) {
+        for(Map.Entry<String, String> entry : cards.entrySet()) {
+            if(entry.getValue().equals(def)) {
+                return entry.getKey();
+            }
+        }
+        return "null";
+    }
+
     public int size() {
         return cards.size();
     }
@@ -42,7 +51,7 @@ public class CardsDB {
         int i=0;
         try(Scanner scanner = new Scanner(file)) {
             while(scanner.hasNext()) {
-                String[] data = scanner.nextLine().split("\\s+");
+                String[] data = scanner.nextLine().split(":");
                 cards.put(data[0], data[1]);
                 i++;
             }
@@ -56,7 +65,7 @@ public class CardsDB {
     public void exportToFile(File file) throws IOException {
         try(FileWriter writer = new FileWriter(file)) {
             for(String desc : cards.keySet()) {
-                String line = desc + ' ' + cards.get(desc) + "\n";
+                String line = desc + ':' + cards.get(desc) + "\n";
                 writer.append(line);
             }
             System.out.println(cards.size() + " cards have been saved.");
