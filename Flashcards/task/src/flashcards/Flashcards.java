@@ -10,10 +10,15 @@ public class Flashcards {
 
     private ConsoleInOut consoleInOut;
 
+    private String importFrom;
+    private String exportTo;
+
     private CardsDB cards;
     private boolean running;
 
-    public Flashcards(ConsoleInOut consoleInOut) {
+    public Flashcards(ConsoleInOut consoleInOut, String importFrom, String exportTo) {
+        this.importFrom = importFrom;
+        this.exportTo = exportTo;
         this.consoleInOut = consoleInOut;
         this.cards = new CardsDB(consoleInOut);
     }
@@ -21,11 +26,36 @@ public class Flashcards {
     public void run() {
         this.running = true;
 
+        if(importFrom != null) {
+            File file = new File(importFrom);
+
+            if(!file.exists()) {
+                consoleInOut.println("File not found.");
+                return;
+            }
+
+            try {
+                cards.importFromFile(file);
+            } catch(Exception e) {
+                consoleInOut.println("Something went wrong!");
+            }
+        }
+
         while(this.running) {
             consoleInOut.println("Input the action (add, remove, import, export, ask, exit, log, hardest card, reset stats):");
             Actions action = getActionFromUser();
             executeAction(action);
             consoleInOut.println("");
+        }
+
+        if(exportTo != null) {
+            File file = new File(exportTo);
+
+            try {
+                cards.exportToFile(file);
+            } catch(Exception e) {
+                consoleInOut.println("Something went wrong!");
+            }
         }
     }
 
@@ -92,7 +122,6 @@ public class Flashcards {
     private void importCardsFromFile() {
         consoleInOut.println("File name:");
         String fileName = consoleInOut.readLine();
-        fileName += ".txt";
 
         File file = new File(fileName);
 
@@ -111,7 +140,6 @@ public class Flashcards {
     private void exportCardsToFile() {
         consoleInOut.println("File name:");
         String fileName = consoleInOut.readLine();
-        fileName += ".txt";
 
         File file = new File(fileName);
 
