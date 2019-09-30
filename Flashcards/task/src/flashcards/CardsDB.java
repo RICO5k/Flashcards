@@ -8,8 +8,10 @@ import java.util.*;
 public class CardsDB {
     private List<Card> cards;
     private final String splitter;
+    private ConsoleInOut consoleInOut;
 
-    public CardsDB() {
+    public CardsDB(ConsoleInOut consoleInOut) {
+        this.consoleInOut = consoleInOut;
         this.cards = new ArrayList<>();
         splitter = ":";
     }
@@ -26,7 +28,7 @@ public class CardsDB {
 
     public Card getCardByDefinition(String definition) {
         for(Card card : this.cards) {
-            if(card.getDescription().equals(definition)) {
+            if(card.getDefinition().equals(definition)) {
                 return card;
             }
         }
@@ -59,9 +61,9 @@ public class CardsDB {
 
         if(card != null) {
             cards.remove(card);
-            System.out.println("The card has been removed.");
+            consoleInOut.println("The card has been removed.");
         } else {
-            System.out.println("Can't remove \"" + description + "\": there is no such card.");
+            consoleInOut.println("Can't remove \"" + description + "\": there is no such card.");
         }
     }
 
@@ -70,11 +72,12 @@ public class CardsDB {
         try(Scanner scanner = new Scanner(file)) {
             while(scanner.hasNextLine()) {
                 String[] data = scanner.nextLine().split(this.splitter);
+                cards.remove(getCardByDescription(data[0]));
                 Card card = new Card(data[0], data[1], Integer.parseInt(data[2]));
                 cards.add(card);
                 loadedCards++;
             }
-            System.out.println(loadedCards + " cards have been loaded.");
+            consoleInOut.println(loadedCards + " cards have been loaded.");
         } catch(Exception e) {
             e.printStackTrace();
             throw e;
@@ -87,7 +90,7 @@ public class CardsDB {
                 String line =  card.toString().replace(" ", splitter) + "\n";
                 writer.append(line);
             }
-            System.out.println(cards.size() + " cards have been saved.");
+            consoleInOut.println(cards.size() + " cards have been saved.");
         } catch(Exception e) {
             throw e;
         }
@@ -101,6 +104,7 @@ public class CardsDB {
             if(card.getMistakes() == mostMistakes) {
                 hardest.add(card);
             } else if(card.getMistakes() > mostMistakes) {
+                mostMistakes = card.getMistakes();
                 hardest.clear();
                 hardest.add(card);
             }

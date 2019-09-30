@@ -8,31 +8,29 @@ import java.util.Scanner;
 
 public class Flashcards {
 
-    private Scanner scanner;
+    private ConsoleInOut consoleInOut;
 
-    private List<String> log;
     private CardsDB cards;
     private boolean running;
 
-    public Flashcards(Scanner scanner ) {
-        this.scanner = scanner;
-        this.log = new ArrayList<>();
-        this.cards = new CardsDB();
+    public Flashcards(ConsoleInOut consoleInOut) {
+        this.consoleInOut = consoleInOut;
+        this.cards = new CardsDB(consoleInOut);
     }
 
     public void run() {
         this.running = true;
 
         while(this.running) {
-            System.out.println("Input the action (add, remove, import, export, ask, exit, log, hardest card, reset stats):");
+            consoleInOut.println("Input the action (add, remove, import, export, ask, exit, log, hardest card, reset stats):");
             Actions action = getActionFromUser();
             executeAction(action);
-            System.out.println();
+            consoleInOut.println("");
         }
     }
 
     private Actions getActionFromUser() {
-        String input = scanner.nextLine().toUpperCase();
+        String input = consoleInOut.readLine().toUpperCase();
 
         Actions action = null;
 
@@ -62,56 +60,57 @@ public class Flashcards {
     }
 
     private void addCard() {
-        System.out.println("The card:");
-        String description = scanner.nextLine();
+        consoleInOut.println("The card:");
+        String description = consoleInOut.readLine();
 
         if(cards.containsCardDescription(description)) {
-            System.out.println("The card \"" + description + "\" already exists.");
+            consoleInOut.println("The card \"" + description + "\" already exists.");
             return;
         }
 
-        System.out.println("The definition of the card:");
-        String definition = scanner.nextLine();
+        consoleInOut.println("The definition of the card:");
+        String definition = consoleInOut.readLine();
 
         if(cards.containsCardDefinition(definition)) {
-            System.out.println("The definition \"" + definition + "\" already exists.");
+            consoleInOut.println("The definition \"" + definition + "\" already exists.");
             return;
         }
 
         Card newCard = new Card(description, definition);
 
         cards.addCard(newCard);
+        System.out.println("The pair (\"" + description + "\":\"" + definition + "\") has been added.");
     }
 
     private void removeCard() {
-        System.out.println("The card:");
-        String description = scanner.nextLine();
+        consoleInOut.println("The card:");
+        String description = consoleInOut.readLine();
 
         cards.removeCardByDescription(description);
     }
 
     private void importCardsFromFile() {
-        System.out.println("File name:");
-        String fileName = scanner.nextLine();
+        consoleInOut.println("File name:");
+        String fileName = consoleInOut.readLine();
         fileName += ".txt";
 
         File file = new File(fileName);
 
         if(!file.exists()) {
-            System.out.println("File not found.");
+            consoleInOut.println("File not found.");
             return;
         }
 
         try {
             cards.importFromFile(file);
         } catch(Exception e) {
-            System.out.println("Something went wrong!");
+            consoleInOut.println("Something went wrong!");
         }
     }
 
     private void exportCardsToFile() {
-        System.out.println("File name:");
-        String fileName = scanner.nextLine();
+        consoleInOut.println("File name:");
+        String fileName = consoleInOut.readLine();
         fileName += ".txt";
 
         File file = new File(fileName);
@@ -119,76 +118,83 @@ public class Flashcards {
         try {
             cards.exportToFile(file);
         } catch(Exception e) {
-            System.out.println("Something went wrong!");
+            consoleInOut.println("Something went wrong!");
         }
     }
 
     private void ask() {
-        System.out.println("How many times to ask?");
-        int reps = Integer.parseInt(scanner.nextLine());
+        consoleInOut.println("How many times to ask?");
+        int reps = Integer.parseInt(consoleInOut.readLine());
 
         if(cards.size() > 0) {
             for (int i = 0; i < reps; i++) {
                 Card card = cards.getRandomCard();
 
-                System.out.println("Print the definition of \"" + card.getDescription() + "\":");
-                String answer = scanner.nextLine();
+                consoleInOut.println("Print the definition of \"" + card.getDescription() + "\":");
+                String answer = consoleInOut.readLine();
                 String correctAnswer = card.getDefinition();
 
                 if (answer.equals(correctAnswer)) {
-                    System.out.println("Correct answer.");
+                    consoleInOut.println("Correct answer.");
                 } else if(cards.containsCardDefinition(answer)) {
                     card.mistake();
-                    System.out.println("Wrong answer. The correct one is \"" + correctAnswer + "\", you've just written the definition of \"" + cards.getCardByDefinition(answer) + "\"");
+                    consoleInOut.println("Wrong answer. The correct one is \"" + correctAnswer + "\", you've just written the definition of \"" + cards.getCardByDefinition(answer).getDescription() + "\"");
                 } else {
                     card.mistake();
-                    System.out.println("Wrong answer. The correct one is \"" + correctAnswer + "\".");
+                    consoleInOut.println("Wrong answer. The correct one is \"" + correctAnswer + "\".");
                 }
             }
         } else {
-            System.out.println("Cards database is empty!");
+            consoleInOut.println("Cards database is empty!");
         }
     }
 
     private void saveLog() {
-        System.out.println("File name: ");
-        String fileName = scanner.nextLine();
-        fileName += ".txt";
+        consoleInOut.println("File name: ");
+        String fileName = consoleInOut.readLine();
 
         File file = new File(fileName);
+        List<String> todaysLog = consoleInOut.getLog();
 
         try(FileWriter writer = new FileWriter(file)) {
-            for(String line : this.log) {
+            for(String line : todaysLog) {
                 writer.append(line);
             }
-            System.out.println("The log has been saved.");
+            consoleInOut.println("The log has been saved.");
         } catch(Exception e) {
-            System.out.println("Something went wrong!");
+            consoleInOut.println("Something went wrong!");
         }
     }
 
     private void printHardestCard() {
         List<Card> hardestCards = cards.getHardestCards();
-        if(hardestCards.isEmpty()) {
-            System.out.print("The hardest cards are ");
+        StringBuilder toPrint = new StringBuilder();
+        if(!hardestCards.isEmpty()) {
+            if(hardestCards.size() > 1) {
+                toPrint.append("The hardest cards are ");
+            } else {
+                toPrint.append("The hardest card is ");
+            }
             for (int i = 0; i < hardestCards.size(); i++) {
-                System.out.print("\"" + hardestCards.get(i).getDescription() + "\"");
+                toPrint.append("\"" + hardestCards.get(i).getDescription() + "\"");
                 if (i != hardestCards.size() - 1) {
-                    System.out.print(", ");
+                    toPrint.append(", ");
                 }
             }
-            System.out.println(". You have " + hardestCards.get(0).getMistakes() + "errors answering them.");
+            toPrint.append(". You have " + hardestCards.get(0).getMistakes() + " errors answering them.");
         } else {
-            System.out.println("There are no cards with errors.");
+            toPrint.append("There are no cards with errors.");
         }
+        consoleInOut.println(toPrint.toString());
     }
 
     private void resetStats() {
         cards.resetMistakes();
+        consoleInOut.println("Card statistics has been reset.");
     }
 
     private void exit() {
-        System.out.println("Bye bye!");
+        consoleInOut.println("Bye bye!");
         this.running = false;
     }
 }
